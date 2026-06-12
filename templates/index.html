@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+  /* ── Hero ── */
+  .hero {
+    position: relative; min-height: 100vh;
+    display: flex; align-items: center; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: url('https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1800') center/cover;
+    filter: brightness(0.45);
+    animation: slowZoom 20s ease-in-out infinite alternate;
+  }
+  @keyframes slowZoom {
+    from { transform: scale(1.03); }
+    to   { transform: scale(1.1); }
+  }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,248,160,0.15) 0%, rgba(26,22,18,0.5) 60%);
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 1200px; margin: 0 auto; padding: 0 4rem;
+  }
+  .hero-jp {
+    position: absolute; right: 4rem; top: 50%; transform: translateY(-50%);
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(4rem, 8vw, 7rem);
+    color: rgba(245,200,0,0.12);
+    writing-mode: vertical-rl; letter-spacing: 0.12em;
+    pointer-events: none; user-select: none;
+  }
+  .hero-eyebrow {
+    font-family: 'Noto Serif JP', serif; font-size: 0.8rem;
+    letter-spacing: 0.5em; color: var(--yellow); text-transform: uppercase;
+    display: block; margin-bottom: 1.4rem;
+    animation: fadeUp 0.8s ease both;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 700; line-height: 1.08; color: #fffdf0;
+    margin-bottom: 1.4rem;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+  .hero-title em { color: var(--yellow); font-style: italic; }
+  .hero-subtitle {
+    font-size: 1rem; color: rgba(255,253,240,0.75);
+    max-width: 500px; line-height: 1.85; margin-bottom: 2.8rem;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; animation: fadeUp 0.8s 0.45s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+    font-size: 0.68rem; letter-spacing: 0.3em; color: rgba(255,253,240,0.5);
+    text-transform: uppercase; animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(7px); }
+  }
+
+  /* ── Filosofía ── */
+  .philosophy {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    background: var(--bg2);
+    border-top: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+  }
+  .philo-item {
+    padding: 3rem 2.5rem; text-align: center;
+    border-right: 1px solid var(--border-soft);
+    display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+  }
+  .philo-item:last-child { border-right: none; }
+  .philo-icon { font-size: 2.2rem; }
+  .philo-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--ink); }
+  .philo-jp { font-family: 'Noto Serif JP', serif; font-size: 0.68rem; color: var(--yellow-dark); letter-spacing: 0.3em; }
+  .philo-desc { font-size: 0.82rem; color: var(--gray); line-height: 1.7; }
+
+  /* ── Secciones ── */
+  .section { padding: 6rem 0; }
+  .section-alt { padding: 6rem 0; background: var(--bg2); }
+
+  /* ── Reviews ── */
+  .review-card {
+    background: var(--white); border: 2px solid var(--border-soft);
+    border-radius: 8px; padding: 1.8rem;
+    transition: box-shadow 0.3s, border-color 0.3s;
+  }
+  .review-card:hover { box-shadow: var(--shadow); border-color: var(--yellow); }
+  .review-stars { color: var(--yellow); font-size: 1.1rem; margin-bottom: 0.8rem; }
+  .review-text { font-size: 0.87rem; color: var(--gray); line-height: 1.8; margin-bottom: 1.2rem; font-style: italic; }
+  .review-author { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
+
+  /* ── Galería ── */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 200px 200px;
+    gap: 0.8rem;
+  }
+  .gallery-item {
+    overflow: hidden; border-radius: 6px;
+    border: 2px solid var(--border-soft);
+    cursor: pointer;
+  }
+  .gallery-item:first-child { grid-column: span 2; grid-row: span 2; }
+  .gallery-item img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.5s, filter 0.3s;
+    filter: brightness(0.92) saturate(1.1);
+  }
+  .gallery-item:hover img { transform: scale(1.07); filter: brightness(1) saturate(1.2); }
+
+  /* ── CTA Banner ── */
+  .cta-banner {
+    background: url('https://images.unsplash.com/photo-1547592180-85f173990554?w=1400') center/cover;
+    padding: 8rem 0; text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-banner::before {
+    content:''; position:absolute; inset:0;
+    background: rgba(255,248,160,0.1);
+  }
+  .cta-banner::after {
+    content:''; position:absolute; inset:0;
+    background: rgba(26,22,18,0.65);
+  }
+  .cta-content { position:relative; z-index:1; }
+  .cta-content h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem); color: #fffdf0; margin-bottom: 0.8rem;
+  }
+  .cta-content p { color: rgba(255,253,240,0.7); margin-bottom: 2.2rem; }
+
+  @media (max-width: 768px) {
+    .hero-content { padding: 0 1.5rem; }
+    .hero-jp { display: none; }
+    .philosophy { grid-template-columns: 1fr; }
+    .philo-item { border-right: none; border-bottom: 1px solid var(--border-soft); }
+    .gallery { grid-template-columns: repeat(2,1fr); grid-template-rows: auto; }
+    .gallery-item:first-child { grid-column: span 2; grid-row: span 1; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-jp">日本料理</div>
+  <div class="hero-content">
+    <span class="hero-eyebrow">カムカム · Bogotá, Colombia</span>
+    <h1 class="hero-title">
+      El Arte de la<br>
+      Cocina <em>Japonesa</em>
+    </h1>
+    <p class="hero-subtitle">
+      Donde cada plato es una obra de arte y cada bocado,
+      un viaje al corazón de Japón. Tradición auténtica, ingredientes selectos.
+    </p>
+    <div class="hero-actions">
+      <a href="{{ url_for('paginas.menu') }}" class="btn btn-yellow">Ver el Menú</a>
+<a href="{{ url_for('paginas.pedidos') }}" class="btn btn-outline" style="color:#fffdf0;border-color:rgba(255,253,240,0.4);">Hacer Pedido</a>    </div>
+  </div>
+  <div class="hero-scroll"><span>Descubrir</span><span>↓</span></div>
+</section>
+
+<!-- Filosofía -->
+<div class="philosophy">
+  <div class="philo-item">
+    <span class="philo-icon"></span>
+    <div class="philo-name">Sushi Artesanal</div>
+    <div class="philo-jp">手作り寿司</div>
+    <p class="philo-desc">Elaborado cada día con arroz Koshihikari de Niigata y pescado fresco del Pacífico.</p>
+  </div>
+  <div class="philo-item">
+    <span class="philo-icon"></span>
+    <div class="philo-name">Ingredientes Selectos</div>
+    <div class="philo-jp">厳選食材</div>
+    <p class="philo-desc">Salsas y especias tradicionales importadas directamente desde Japón.</p>
+  </div>
+  <div class="philo-item">
+    <span class="philo-icon"></span>
+    <div class="philo-name">Ambiente Íntimo</div>
+    <div class="philo-jp">雰囲気</div>
+    <p class="philo-desc">Un espacio pensado para vivir la experiencia japonesa con calma y elegancia.</p>
+  </div>
+</div>
+
+<!-- Destacados -->
+<section class="section">
+  <div class="container">
+    <div style="margin-bottom:3rem;">
+      <span class="section-eyebrow">厳選メニュー · Especialidades</span>
+      <h2 class="section-title">Nuestros Platos<br>Más Queridos</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="grid-3">
+      {% for dish in featured %}
+      <a href="{{ url_for('paginas.dish_detail', id=dish.id) }}" class="dish-card">
+        <img src="{{ dish.image_url }}" alt="{{ dish.name }}" loading="lazy">
+        <div class="dish-card-body">
+          <div class="dish-card-jp">{{ dish.name_jp }}</div>
+          <div class="dish-card-name">{{ dish.name }}</div>
+          <p class="dish-card-desc">{{ dish.description[:90] }}...</p>
+          <div class="dish-card-footer">
+            <span class="dish-price">$ {{ "{:,.0f}".format(dish.price) }}</span>
+            {% if dish.spice_level > 0 %}
+              <span>{{ '' * dish.spice_level }}</span>
+            {% else %}
+              <span class="tag tag-yellow">⭐ Firma</span>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    <div style="text-align:center;margin-top:2.5rem;">
+      <a href="{{ url_for('paginas.menu') }}" class="btn btn-outline">Ver Menú Completo →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Galería -->
+<section class="section-alt">
+  <div class="container">
+    <div style="margin-bottom:2.5rem; text-align:center;">
+      <span class="section-eyebrow">ギャラリー · Galería</span>
+      <h2 class="section-title">Una Experiencia Visual</h2>
+      <div class="divider" style="margin:1rem auto;"></div>
+    </div>
+    <div class="gallery">
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800" alt="Sushi">
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=600" alt="Ramen">
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=600" alt="Dragon Roll">
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1635361949423-b40c3c02f5cf?w=600" alt="Tempura">
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1562802378-063ec186a863?w=600" alt="Rainbow Roll">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Reseñas -->
+<section class="section">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3rem;">
+      <span class="section-eyebrow">お客様の声 · Testimonios</span>
+      <h2 class="section-title">Lo que Dicen<br>Nuestros Clientes</h2>
+      <div class="divider" style="margin:1rem auto;"></div>
+    </div>
+    <div class="grid-4">
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="review-stars">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</div>
+        <p class="review-text">"{{ review.comment }}"</p>
+        <div class="review-author">— {{ review.name }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-banner">
+  <div class="cta-content">
+    <h2>¿Listo para Vivir la Experiencia?</h2>
+    <p>Reserva tu mesa y déjate llevar por los sabores de Japón</p>
+<a href="{{ url_for('paginas.pedidos') }}" class="btn btn-yellow" style="font-size:0.95rem;padding:0.9rem 2.5rem;">
+  Pedir Ahora →
+</a>      Reservar Ahora →
+    </a>
+  </div>
+</section>
+
+{% endblock %}

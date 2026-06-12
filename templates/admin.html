@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin · CAM-CAM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#fffdf0; --bg2:#fff9d6; --bg3:#fff3a8;
+      --yellow:#f5c800; --yellow-dark:#d4a800;
+      --red:#c9363a; --ink:#1a1612; --ink-soft:#3a342c;
+      --gray:#7a6f60; --white:#ffffff; --border:#e8d96a;
+      --border-soft:#f0e890; --green:#16a34a;
+      --shadow:0 4px 20px rgba(200,160,0,0.1);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); display:flex; min-height:100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width:240px; background:var(--ink); color:#f0e8d0;
+      display:flex; flex-direction:column;
+      position:fixed; top:0; left:0; bottom:0; z-index:100;
+    }
+    .sidebar-brand { padding:1.8rem 1.5rem; border-bottom:1px solid rgba(245,200,0,0.15); }
+    .sidebar-brand h1 { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--yellow); }
+    .sidebar-brand h1 span { color:var(--red); }
+    .sidebar-brand p { font-size:0.7rem; color:#a09070; margin-top:0.2rem; letter-spacing:0.2em; }
+    .sidebar-nav { flex:1; padding:1.2rem 0; }
+    .nav-section { font-size:0.62rem; letter-spacing:0.35em; color:#6a5a40; text-transform:uppercase; padding:0.8rem 1.5rem 0.4rem; }
+    .nav-item {
+      display:flex; align-items:center; gap:0.7rem;
+      padding:0.7rem 1.5rem; color:#c8b890; text-decoration:none;
+      font-size:0.86rem; font-weight:500; transition:all .18s; cursor:pointer;
+      border-left:3px solid transparent;
+    }
+    .nav-item:hover { background:rgba(245,200,0,0.08); color:var(--yellow); }
+    .nav-item.active { background:rgba(245,200,0,0.1); color:var(--yellow); border-left-color:var(--yellow); }
+    .nav-item .icon { font-size:1rem; width:20px; text-align:center; }
+    .badge-count { background:var(--red); color:#fff; font-size:0.65rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:10px; }
+    .sidebar-footer { padding:1.2rem 1.5rem; border-top:1px solid rgba(245,200,0,0.1); font-size:0.75rem; color:#6a5a40; }
+    .sidebar-footer a { color:var(--yellow); text-decoration:none; }
+
+    /* Main */
+    .main { margin-left:240px; flex:1; display:flex; flex-direction:column; }
+    .topbar {
+      background:var(--white); border-bottom:2px solid var(--border);
+      padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:50;
+    }
+    .topbar h2 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--ink); }
+    .topbar-right { font-size:0.83rem; color:var(--gray); }
+    .content { padding:2rem; }
+
+    /* Stats */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1.2rem; margin-bottom:2rem; }
+    .stat-card {
+      background:var(--white); border:2px solid var(--border-soft);
+      border-radius:10px; padding:1.5rem;
+      box-shadow:var(--shadow); transition:transform .2s, border-color .2s;
+    }
+    .stat-card:hover { transform:translateY(-3px); border-color:var(--yellow); }
+    .stat-icon { font-size:1.8rem; margin-bottom:0.4rem; }
+    .stat-num { font-family:'Playfair Display',serif; font-size:2.2rem; color:var(--red); line-height:1; }
+    .stat-label { font-size:0.75rem; color:var(--gray); letter-spacing:0.08em; text-transform:uppercase; margin-top:0.3rem; }
+
+    /* Panels */
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    /* Table */
+    .table-box { background:var(--white); border:2px solid var(--border-soft); border-radius:10px; overflow:hidden; box-shadow:var(--shadow); }
+    .table-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1.2rem 1.5rem; background:var(--bg3); border-bottom:1px solid var(--border);
+    }
+    .table-header h3 { font-family:'Playfair Display',serif; font-size:1.1rem; }
+    .table-search {
+      background:var(--white); border:1px solid var(--border); color:var(--ink);
+      padding:0.45rem 0.9rem; font-size:0.83rem; font-family:'DM Sans',sans-serif;
+      border-radius:4px; outline:none; width:220px; transition:border-color .2s;
+    }
+    .table-search:focus { border-color:var(--yellow-dark); }
+    table { width:100%; border-collapse:collapse; }
+    th {
+      background:var(--bg2); color:var(--ink); font-size:0.7rem;
+      letter-spacing:0.15em; text-transform:uppercase;
+      padding:0.85rem 1.2rem; text-align:left;
+      border-bottom:1px solid var(--border); font-weight:700;
+    }
+    td { padding:0.85rem 1.2rem; font-size:0.85rem; color:var(--ink-soft); border-bottom:1px solid var(--border-soft); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg2); }
+
+    /* Status badges */
+    .status-badge { display:inline-block; padding:0.2rem 0.75rem; border-radius:20px; font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
+    .s-nuevo      { background:rgba(59,130,246,0.1); color:#1d4ed8; border:1px solid rgba(59,130,246,0.3); }
+    .s-preparando { background:rgba(245,200,0,0.2); color:#9a7c00; border:1px solid var(--border); }
+    .s-listo      { background:rgba(22,163,74,0.1); color:var(--green); border:1px solid rgba(22,163,74,0.3); }
+    .s-entregado  { background:rgba(107,114,128,0.1); color:#374151; border:1px solid rgba(107,114,128,0.3); }
+    .s-cancelado  { background:rgba(201,54,58,0.1); color:var(--red); border:1px solid rgba(201,54,58,0.25); }
+
+    .action-btn { padding:0.28rem 0.7rem; border-radius:4px; font-size:0.72rem; font-weight:600; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; transition:all .15s; margin-right:0.3rem; margin-bottom:0.2rem; }
+    .btn-prep    { background:rgba(245,200,0,0.15); color:#9a7c00; border:1px solid var(--border); }
+    .btn-prep:hover { background:var(--yellow); color:var(--ink); }
+    .btn-listo   { background:rgba(22,163,74,0.1); color:var(--green); border:1px solid rgba(22,163,74,0.3); }
+    .btn-listo:hover { background:var(--green); color:#fff; }
+    .btn-entregado { background:rgba(107,114,128,0.1); color:#374151; border:1px solid rgba(107,114,128,0.3); }
+    .btn-entregado:hover { background:#374151; color:#fff; }
+    .btn-cancel  { background:rgba(201,54,58,0.08); color:var(--red); border:1px solid rgba(201,54,58,0.2); }
+    .btn-cancel:hover { background:var(--red); color:#fff; }
+
+    .items-list { font-size:0.78rem; color:var(--gray); }
+    .items-list span { display:block; }
+
+    .tipo-badge { font-size:0.72rem; padding:0.15rem 0.55rem; border-radius:10px; }
+    .tipo-recoger   { background:rgba(59,130,246,0.08); color:#1d4ed8; }
+    .tipo-domicilio { background:rgba(139,92,246,0.08); color:#6d28d9; }
+
+    /* Login */
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--bg2),var(--bg3)); width:100%; }
+    .login-box { background:var(--white); border:2px solid var(--border); border-radius:12px; padding:3rem; width:100%; max-width:380px; box-shadow:var(--shadow); text-align:center; }
+    .login-box h1 { font-family:'Playfair Display',serif; font-size:2rem; color:var(--ink); margin-bottom:0.3rem; }
+    .login-box h1 span { color:var(--red); }
+    .login-box p { color:var(--gray); font-size:0.85rem; margin-bottom:2rem; }
+    .login-input { width:100%; background:var(--bg2); border:2px solid var(--border-soft); color:var(--ink); padding:0.85rem 1rem; font-size:0.9rem; font-family:'DM Sans',sans-serif; border-radius:6px; outline:none; margin-bottom:1rem; transition:border-color .2s; }
+    .login-input:focus { border-color:var(--yellow); }
+    .login-btn { width:100%; background:var(--yellow); color:var(--ink); border:2px solid var(--yellow-dark); padding:0.9rem; font-size:0.9rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; border-radius:6px; font-family:'DM Sans',sans-serif; transition:all .2s; }
+    .login-btn:hover { background:var(--yellow-dark); color:#fff; }
+    .login-error { color:var(--red); font-size:0.82rem; margin-top:0.5rem; display:none; }
+
+    @media (max-width:900px) {
+      .sidebar { width:200px; }
+      .main { margin-left:200px; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <h1>CAM<span>-</span>CAM</h1>
+    <p>Panel de Administración</p>
+    <input type="text"     class="login-input" id="loginUser" placeholder="Usuario">
+    <input type="password" class="login-input" id="loginPass" placeholder="Contraseña">
+    <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+    <p class="login-error" id="loginError">Usuario o contraseña incorrectos</p>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="adminPanel" style="display:none; width:100%;">
+
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <h1>CAM<span>-</span>CAM</h1>
+      <p>Panel Admin</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <a class="nav-item active" onclick="showPanel('dashboard', this)">
+        <span class="icon"></span> Dashboard
+      </a>
+      <div class="nav-section">Gestión</div>
+      <a class="nav-item" onclick="showPanel('pedidos', this)">
+        <span class="icon"></span> Pedidos
+        <span class="badge-count" id="badgePedidos">0</span>
+      </a>
+      <a class="nav-item" onclick="showPanel('platos', this)">
+        <span class="icon"></span> Platos
+      </a>
+      <a class="nav-item" onclick="showPanel('proveedores', this)">
+  <span class="icon"></span> Proveedores
+</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/" target="_blank">← Ver sitio web</a><br>
+      <span style="cursor:pointer;" onclick="doLogout()"> Cerrar sesión</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h2 id="topbarTitle">Dashboard</h2>
+      <div class="topbar-right" id="currentDate"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-icon"></div><div class="stat-num" id="statTotal">–</div><div class="stat-label">Total Pedidos</div></div>
+          <div class="stat-card"><div class="stat-icon"></div><div class="stat-num" id="statNuevo">–</div><div class="stat-label">Nuevos</div></div>
+          <div class="stat-card"><div class="stat-icon"></div><div class="stat-num" id="statPreparando">–</div><div class="stat-label">Preparando</div></div>
+          <div class="stat-card"><div class="stat-icon"></div><div class="stat-num" id="statVentas">–</div><div class="stat-label">Ventas Hoy</div></div>
+        </div>
+        <div class="table-box">
+          <div class="table-header">
+            <h3> Pedidos Recientes</h3>
+            <button class="action-btn btn-prep" onclick="showPanel('pedidos', document.querySelectorAll('.nav-item')[1])">Ver todos →</button>
+          </div>
+          <table>
+            <thead><tr><th>#</th><th>Cliente</th><th>Platos</th><th>Total</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="recentPedidos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PEDIDOS -->
+      <div class="panel" id="panel-pedidos">
+        <div class="table-box">
+          <div class="table-header">
+            <h3> Todos los Pedidos</h3>
+            <input type="text" class="table-search" id="searchPedidos" placeholder="🔍 Buscar cliente...">
+          </div>
+          <table>
+            <thead><tr><th>#</th><th>Cliente</th><th>Contacto</th><th>Platos</th><th>Total</th><th>Tipo</th><th>Nota</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="allPedidos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PLATOS -->
+      <div class="panel" id="panel-platos">
+        <div class="table-box">
+          <div class="table-header">
+            <h3> Platos del Menú</h3>
+            <input type="text" class="table-search" id="searchPlatos" placeholder="🔍 Buscar plato...">
+          </div>
+          <table>
+            <thead><tr><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Picante</th><th>Destacado</th></tr></thead>
+            <tbody id="allPlatos"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- PROVEEDORES -->
+<div class="panel" id="panel-proveedores">
+
+  <div class="table-box">
+
+    <div class="table-header">
+
+      <h3>
+         Gestión de Proveedores
+      </h3>
+
+    </div>
+
+    <div style="padding: 2rem;">
+
+      <form id="proveedorForm">
+
+        <input
+        type="text"
+        id="provNombre"
+        placeholder="Nombre del proveedor"
+        class="table-search"
+        style="width:100%;margin-bottom:1rem;">
+
+        <input
+        type="text"
+        id="provContacto"
+        placeholder="Contacto"
+        class="table-search"
+        style="width:100%;margin-bottom:1rem;">
+
+        <textarea
+        id="provProductos"
+        placeholder="Productos"
+        class="table-search"
+        style="width:100%;height:120px;margin-bottom:1rem;"></textarea>
+
+        <button
+        type="button"
+        class="action-btn btn-listo"
+        onclick="guardarProveedor()">
+
+          Guardar Proveedor
+
+        </button>
+
+      </form>
+
+    </div>
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>Proveedor</th>
+
+          <th>Contacto</th>
+
+          <th>Productos</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="tablaProveedores">
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+<script>
+  // ── PROVEEDORES ─────────────────────────────
+
+let proveedores = [];
+
+function guardarProveedor(){
+
+  const nombre = document.getElementById('provNombre').value;
+  const contacto = document.getElementById('provContacto').value;
+  const productos = document.getElementById('provProductos').value;
+
+  if(!nombre || !contacto || !productos){
+    alert('Completa todos los campos');
+    return;
+  }
+
+  proveedores.push({
+    nombre,
+    contacto,
+    productos
+  });
+
+  renderProveedores();
+
+  document.getElementById('proveedorForm').reset();
+}
+
+function renderProveedores(){
+
+  const tabla = document.getElementById('tablaProveedores');
+
+  tabla.innerHTML = proveedores.map(p => `
+
+    <tr>
+
+      <td>
+        <strong>${p.nombre}</strong>
+      </td>
+
+      <td>
+        ${p.contacto}
+      </td>
+
+      <td>
+        ${p.productos}
+      </td>
+
+    </tr>
+
+  `).join('');
+
+}
+  // ── Auth ──────────────────────────────────────────────────────────
+  function doLogin() {
+    const u = document.getElementById('loginUser').value;
+    const p = document.getElementById('loginPass').value;
+    if (u === 'admin' && p === 'camcam2024') {
+      sessionStorage.setItem('adminAuth','1');
+      document.getElementById('loginWrap').style.display  = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+      init();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  }
+  document.getElementById('loginUser').addEventListener('keydown', e => e.key==='Enter'&&doLogin());
+  document.getElementById('loginPass').addEventListener('keydown', e => e.key==='Enter'&&doLogin());
+  function doLogout() { sessionStorage.removeItem('adminAuth'); location.reload(); }
+
+  if (sessionStorage.getItem('adminAuth')==='1') {
+    document.getElementById('loginWrap').style.display  = 'none';
+    document.getElementById('adminPanel').style.display = 'flex';
+    window.addEventListener('DOMContentLoaded', init);
+  }
+
+  // ── Navegación ────────────────────────────────────────────────────
+  function showPanel(name, el) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    if (el) el.classList.add('active');
+    const titles = { dashboard:'Dashboard', pedidos:'Pedidos', platos:'Platos del Menú' };
+    document.getElementById('topbarTitle').textContent = titles[name] || name;
+    if (name === 'pedidos') loadAllPedidos();
+    if (name === 'platos')  loadPlatos();
+  }
+
+  document.getElementById('currentDate').textContent =
+    new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // ── Data ──────────────────────────────────────────────────────────
+  let allPedidosData = [];
+  let allPlatosData  = [];
+
+  async function init() {
+    await loadStats();
+    await loadRecentPedidos();
+  }
+
+  async function loadStats() {
+    const [pRes, dRes] = await Promise.all([fetch('/api/admin/pedidos'), fetch('/api/dishes')]);
+    allPedidosData = await pRes.json();
+    const dishes   = await dRes.json();
+
+    const hoy   = new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
+    const nuevo = allPedidosData.filter(p => p.status==='nuevo').length;
+    const prep  = allPedidosData.filter(p => p.status==='preparando').length;
+    const ventasHoy = allPedidosData
+      .filter(p => p.created_at.startsWith(new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'})))
+      .reduce((s,p) => s + p.total, 0);
+
+    document.getElementById('statTotal').textContent      = allPedidosData.length;
+    document.getElementById('statNuevo').textContent      = nuevo;
+    document.getElementById('statPreparando').textContent = prep;
+    document.getElementById('statVentas').textContent     = '$ ' + ventasHoy.toLocaleString('es-CO');
+    document.getElementById('badgePedidos').textContent   = nuevo + prep;
+  }
+
+  async function loadRecentPedidos() {
+    const res  = await fetch('/api/admin/pedidos');
+    const data = await res.json();
+    const tbody = document.getElementById('recentPedidos');
+    const recent = data.slice(0, 8);
+    tbody.innerHTML = recent.length ? recent.map(o => pedidoRow(o, true)).join('') :
+      '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray);">No hay pedidos aún</td></tr>';
+  }
+
+  async function loadAllPedidos() {
+    const res = await fetch('/api/admin/pedidos');
+    allPedidosData = await res.json();
+    renderPedidos(allPedidosData);
+  }
+
+  function renderPedidos(data) {
+    const tbody = document.getElementById('allPedidos');
+    tbody.innerHTML = data.length ? data.map(o => pedidoRow(o, false)).join('') :
+      '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--gray);">No hay pedidos</td></tr>';
+  }
+
+  function pedidoRow(o, short) {
+    const badge  = `<span class="status-badge s-${o.status}">${o.status}</span>`;
+    const tipo   = `<span class="tipo-badge tipo-${o.tipo}">${o.tipo==='domicilio'?'🛵 Domicilio':'🏃 Recoger'}</span>`;
+    const items  = `<div class="items-list">${o.items.map(i=>`<span>${i.quantity}x ${i.dish_name}</span>`).join('')}</div>`;
+    const total  = `<strong style="color:var(--red);">$ ${Number(o.total).toLocaleString('es-CO')}</strong>`;
+    const actions = `
+      <button class="action-btn btn-prep"     onclick="upd(${o.id},'preparando')">👨‍🍳 Preparando</button>
+      <button class="action-btn btn-listo"    onclick="upd(${o.id},'listo')">✅ Listo</button>
+      <button class="action-btn btn-entregado" onclick="upd(${o.id},'entregado')">📦 Entregado</button>
+      <button class="action-btn btn-cancel"   onclick="upd(${o.id},'cancelado')">❌</button>`;
+    if (short) return `<tr>
+      <td style="color:var(--gray);font-size:0.75rem;">#${o.id}</td>
+      <td><strong>${o.name}</strong><br><span style="font-size:0.75rem;color:var(--gray);">${o.created_at}</span></td>
+      <td>${items}</td><td>${total}</td><td>${tipo}</td><td>${badge}</td><td>${actions}</td></tr>`;
+    return `<tr>
+      <td style="color:var(--gray);font-size:0.75rem;">#${o.id}</td>
+      <td><strong>${o.name}</strong><br><span style="font-size:0.75rem;color:var(--gray);">${o.created_at}</span></td>
+      <td style="font-size:0.78rem;">${o.phone}<br>${o.email||''}</td>
+      <td>${items}</td><td>${total}</td><td>${tipo}${o.address?`<br><span style="font-size:0.74rem;color:var(--gray);">${o.address}</span>`:''}</td>
+      <td style="font-size:0.78rem;color:var(--gray);">${o.notes||'–'}</td>
+      <td>${badge}</td><td>${actions}</td></tr>`;
+  }
+
+  async function upd(id, status) {
+    await fetch(`/api/admin/pedidos/${id}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ status })
+    });
+    await loadStats();
+    await loadAllPedidos();
+    await loadRecentPedidos();
+  }
+
+  async function loadPlatos() {
+    const res = await fetch('/api/dishes');
+    allPlatosData = await res.json();
+    renderPlatos(allPlatosData);
+  }
+
+  function renderPlatos(data) {
+    document.getElementById('allPlatos').innerHTML = data.map(d => `<tr>
+      <td><img src="${d.image_url}" style="width:52px;height:42px;object-fit:cover;border-radius:4px;border:1px solid var(--border-soft)"
+               onerror="this.style.display='none'"></td>
+      <td><strong>${d.name}</strong><br><span style="font-size:0.74rem;color:var(--gray);">${d.name_jp||''}</span></td>
+      <td>${d.category}</td>
+      <td style="color:var(--red);font-weight:600;">$ ${Number(d.price).toLocaleString('es-CO')}</td>
+      <td>${'🌶️'.repeat(d.spice_level||0)||'😌'}</td>
+      <td>${d.is_featured?'⭐ Sí':'–'}</td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('searchPedidos')?.addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderPedidos(allPedidosData.filter(o => o.name.toLowerCase().includes(q) || o.phone.includes(q)));
+  });
+  document.getElementById('searchPlatos')?.addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderPlatos(allPlatosData.filter(d => d.name.toLowerCase().includes(q)));
+  });
+</script>
+</body>
+</html>

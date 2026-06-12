@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}{{ dish.name }} · CAM-CAM{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-hero {
+    display: grid; grid-template-columns: 1fr 1fr; min-height: 88vh;
+  }
+  .detail-image { position:relative; overflow:hidden; }
+  .detail-image img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+  .detail-image:hover img { transform:scale(1.03); }
+  .detail-image::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent 65%, var(--bg) 100%);
+  }
+  .detail-info {
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 5rem 4rem; background:var(--bg);
+  }
+  .breadcrumb {
+    display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;
+    font-size:0.78rem; color:var(--gray); margin-bottom:2rem;
+  }
+  .breadcrumb a { color:var(--yellow-dark); text-decoration:none; }
+  .breadcrumb a:hover { text-decoration:underline; }
+  .detail-cat { font-family:'Noto Serif JP',serif; font-size:0.73rem; letter-spacing:0.4em; color:var(--yellow-dark); text-transform:uppercase; margin-bottom:0.4rem; }
+  .detail-name { font-family:'Playfair Display',serif; font-size:clamp(2rem,4vw,3rem); line-height:1.1; color:var(--ink); margin-bottom:0.3rem; }
+  .detail-jp { font-family:'Noto Serif JP',serif; color:var(--gray); font-size:0.95rem; margin-bottom:1.3rem; letter-spacing:0.2em; }
+  .detail-desc { font-size:0.96rem; line-height:1.9; color:var(--ink-soft); margin-bottom:2rem; max-width:480px; }
+  .detail-meta { display:flex; gap:1.2rem; flex-wrap:wrap; margin-bottom:2rem; }
+  .meta-badge {
+    display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; color:var(--gray);
+    background:var(--bg2); border:1px solid var(--border-soft); border-radius:20px; padding:0.35rem 0.9rem;
+  }
+  .meta-badge strong { color:var(--ink); }
+  .detail-price {
+    font-family:'Playfair Display',serif; font-size:2.8rem;
+    color:var(--red); margin-bottom:2rem; font-weight:700;
+  }
+  .detail-price small { font-size:0.9rem; color:var(--gray); font-family:'DM Sans',sans-serif; }
+
+  /* WhatsApp button */
+  .btn-whatsapp {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: #25D366; color: #fff;
+    padding: 0.85rem 2rem; border-radius: 3px;
+    font-size: 0.88rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all 0.22s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-whatsapp:hover { background: #1ebe5d; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,0.3); }
+  .btn-whatsapp svg { width:20px; height:20px; fill:#fff; }
+
+  .related-section { padding:4rem 0 6rem; background:var(--bg2); }
+  .related-section h2 { font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:2rem; }
+
+  @media (max-width:900px) {
+    .detail-hero { grid-template-columns:1fr; }
+    .detail-image { height:55vw; min-height:260px; }
+    .detail-info { padding:2.5rem 1.5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-hero">
+  <div class="detail-image">
+    <img src="{{ dish.image_url }}" alt="{{ dish.name }}">
+  </div>
+  <div class="detail-info">
+    <div class="breadcrumb">
+      <a href="{{ url_for('paginas.index') }}">Inicio</a> ›
+      <a href="{{ url_for('paginas.menu') }}">Menú</a> ›
+      <a href="{{ url_for('paginas.menu', categoria=dish.category_id) }}">{{ dish.category.name }}</a> ›
+      <span>{{ dish.name }}</span>
+    </div>
+
+    <div class="detail-cat">{{ dish.category.icon }} {{ dish.category.name }} · {{ dish.category.name_jp }}</div>
+    <h1 class="detail-name">{{ dish.name }}</h1>
+    <div class="detail-jp">{{ dish.name_jp }}</div>
+    <div class="divider"></div>
+    <p class="detail-desc">{{ dish.description }}</p>
+
+    <div class="detail-meta">
+      {% if dish.is_featured %}
+        <div class="meta-badge">⭐ <strong>Plato Destacado</strong></div>
+      {% endif %}
+      {% if dish.spice_level > 0 %}
+        <div class="meta-badge">{{ '🌶️' * dish.spice_level }} <strong>Picante nivel {{ dish.spice_level }}/3</strong></div>
+      {% else %}
+        <div class="meta-badge">😌 <strong>Sin picante</strong></div>
+      {% endif %}
+      <div class="meta-badge">✅ <strong>Disponible hoy</strong></div>
+    </div>
+
+    <div class="detail-price">
+      $ {{ "{:,.0f}".format(dish.price) }}
+      <small>COP</small>
+    </div>
+
+    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+      <!-- WhatsApp con mensaje pre-cargado -->
+      <a href="https://wa.me/573204762086?text=Hola%20CAM-CAM%20🍣%20Quiero%20pedir:%20*{{ dish.name }}*%20-%20${{ '{:,.0f}'.format(dish.price) }}%20COP"
+         target="_blank" class="btn-whatsapp">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Pedir por WhatsApp
+      </a>
+      <a href="{{ url_for('paginas.pedidos') }}" class="btn btn-yellow">Pedir</a>
+      <a href="{{ url_for('paginas.menu') }}" class="btn btn-outline">← Volver</a>
+    </div>
+  </div>
+</div>
+
+{% if related %}
+<section class="related-section">
+  <div class="container">
+    <h2>También te puede gustar</h2>
+    <div class="grid-3">
+      {% for r in related %}
+      <a href="{{ url_for('paginas.dish_detail', id=r.id) }}" class="dish-card">
+        <img src="{{ r.image_url }}" alt="{{ r.name }}" style="width:100%;height:210px;object-fit:cover;">
+        <div class="dish-card-body">
+          <div class="dish-card-jp">{{ r.name_jp }}</div>
+          <div class="dish-card-name">{{ r.name }}</div>
+          <div class="dish-card-footer">
+            <span class="dish-price">$ {{ "{:,.0f}".format(r.price) }}</span>
+            <span>{{ '🌶️' * r.spice_level if r.spice_level > 0 else '' }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

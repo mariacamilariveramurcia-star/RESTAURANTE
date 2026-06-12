@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% block title %}Menú · CAM-CAM{% endblock %}
+
+{% block extra_head %}
+<style>
+  .menu-hero {
+    background: linear-gradient(160deg, var(--bg2) 0%, var(--bg3) 100%);
+    padding: 7rem 0 4rem; text-align: center;
+    border-bottom: 2px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .menu-hero::before {
+    content: 'メニュー';
+    position: absolute; font-family: 'Noto Serif JP', serif;
+    font-size: 16rem; color: rgba(200,160,0,0.06);
+    top:50%; left:50%; transform:translate(-50%,-50%);
+    pointer-events: none; white-space: nowrap;
+  }
+  .menu-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(2.5rem,5vw,3.8rem); color:var(--ink); position:relative; }
+  .menu-hero p  { color:var(--gray); font-size:0.88rem; letter-spacing:0.2em; position:relative; margin-top:0.5rem; }
+
+  /* Category pills */
+  .cat-strip {
+    display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center;
+    padding: 1.8rem 2rem 1.5rem;
+    background: var(--bg); border-bottom: 1px solid var(--border-soft);
+    position: sticky; top: 72px; z-index: 50;
+  }
+  .cat-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.5rem 1.3rem; border: 2px solid var(--border-soft);
+    background: var(--white); color: var(--ink-soft);
+    font-size: 0.82rem; font-family:'DM Sans',sans-serif;
+    cursor: pointer; border-radius: 50px;
+    text-decoration: none; transition: all 0.2s; font-weight: 500;
+  }
+  .cat-btn:hover { border-color: var(--yellow); background: var(--yellow-soft); }
+  .cat-btn.active { background: var(--yellow); border-color: var(--yellow-dark); color: var(--ink); font-weight: 600; }
+
+  /* Layout */
+  .menu-layout {
+    display: grid; grid-template-columns: 270px 1fr;
+    gap: 2rem; padding: 2.5rem 0 5rem; align-items: start;
+  }
+
+  /* Sidebar */
+  .filter-sidebar {
+    position: sticky; top: 165px;
+    background: var(--white); border: 2px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(200,160,0,0.08);
+  }
+  .filter-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--border-soft);
+    background: var(--bg3);
+  }
+  .filter-header h3 { font-family:'Playfair Display',serif; font-size:0.95rem; color:var(--ink); }
+  .filter-clear { font-size:0.74rem; color:var(--red); text-decoration:none; font-weight:500; transition:opacity .2s; }
+  .filter-clear:hover { opacity:0.7; }
+
+  .filter-group { padding: 1.3rem 1.4rem; border-bottom: 1px solid var(--border-soft); }
+  .filter-group:last-child { border-bottom: none; }
+  .filter-label { font-size:0.7rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--yellow-dark); margin-bottom:1rem; display:block; font-weight:600; }
+
+  /* Price range */
+  .price-inputs { display:flex; gap:0.5rem; align-items:center; margin-bottom:0.9rem; }
+  .price-input {
+    flex:1; background:var(--bg2); border:1px solid var(--border);
+    color:var(--ink); padding:0.45rem 0.6rem;
+    font-size:0.8rem; font-family:'DM Sans',sans-serif;
+    border-radius:4px; outline:none; transition:border-color .2s; width:100%;
+  }
+  .price-input:focus { border-color:var(--yellow-dark); }
+  .price-sep { color:var(--gray); font-size:0.8rem; flex-shrink:0; }
+  .range-wrap { position:relative; height:26px; margin-bottom:0.4rem; }
+  .range-track { position:absolute; top:50%; left:0; right:0; height:4px; background:var(--border-soft); transform:translateY(-50%); border-radius:2px; }
+  .range-fill  { position:absolute; top:0; height:100%; background:linear-gradient(90deg,var(--red),var(--yellow)); border-radius:2px; pointer-events:none; }
+  .range-slider {
+    position:absolute; top:50%; width:100%;
+    transform:translateY(-50%); -webkit-appearance:none; appearance:none;
+    background:transparent; pointer-events:none; height:26px;
+  }
+  .range-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:var(--yellow); border:2px solid var(--yellow-dark);
+    cursor:pointer; pointer-events:all; box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    transition:transform .15s;
+  }
+  .range-slider::-webkit-slider-thumb:hover { transform:scale(1.25); }
+  .price-labels { display:flex; justify-content:space-between; font-size:0.73rem; color:var(--gray); }
+
+  /* Spice */
+  .spice-options { display:flex; flex-direction:column; gap:0.4rem; }
+  .spice-option {
+    display:flex; align-items:center; gap:0.65rem; cursor:pointer;
+    padding:0.45rem 0.65rem; border:1px solid transparent;
+    border-radius:6px; transition:all .15s; font-size:0.84rem; color:var(--ink-soft);
+  }
+  .spice-option:hover { border-color:var(--border); background:var(--bg2); }
+  .spice-option.selected { border-color:var(--yellow-dark); background:var(--yellow-soft); color:var(--ink); }
+  .spice-option input { display:none; }
+  .spice-dot { width:13px; height:13px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; transition:all .15s; }
+  .spice-option.selected .spice-dot { background:var(--yellow-dark); border-color:var(--yellow-dark); }
+
+  /* Toggle */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; }
+  .toggle-label { font-size:0.86rem; color:var(--ink-soft); }
+  .toggle { position:relative; width:42px; height:22px; cursor:pointer; flex-shrink:0; }
+  .toggle input { display:none; }
+  .toggle-track { position:absolute; inset:0; background:#ddd; border-radius:11px; transition:background .2s; }
+  .toggle input:checked ~ .toggle-track { background:var(--yellow); }
+  .toggle-thumb { position:absolute; top:3px; left:3px; width:16px; height:16px; background:var(--white); border-radius:50%; transition:transform .2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+  .toggle input:checked ~ .toggle-thumb { transform:translateX(20px); }
+
+  /* Sort */
+  .sort-select {
+    width:100%; background:var(--bg2); border:1px solid var(--border);
+    color:var(--ink); padding:0.55rem 2rem 0.55rem 0.8rem;
+    font-size:0.84rem; font-family:'DM Sans',sans-serif;
+    border-radius:4px; outline:none; cursor:pointer; transition:border-color .2s;
+    -webkit-appearance:none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a6f60' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 0.8rem center;
+  }
+  .sort-select:focus { border-color:var(--yellow-dark); }
+
+  .apply-btn {
+    width:100%; background:var(--yellow); color:var(--ink);
+    border:none; padding:0.75rem; font-size:0.82rem; font-weight:600;
+    letter-spacing:0.1em; text-transform:uppercase; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:all .2s;
+  }
+  .apply-btn:hover { background:var(--yellow-dark); color:var(--white); }
+
+  /* Results */
+  .results-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:1.3rem; padding-bottom:0.9rem; border-bottom:1px solid var(--border-soft);
+  }
+  .results-count { font-size:0.84rem; color:var(--gray); }
+  .results-count strong { color:var(--red); }
+
+  .active-tags { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.2rem; }
+  .filter-tag {
+    display:inline-flex; align-items:center; gap:0.35rem;
+    padding:0.28rem 0.7rem; background:var(--yellow-soft);
+    border:1px solid var(--border); border-radius:20px;
+    font-size:0.73rem; color:var(--ink-soft); font-weight:500;
+  }
+  .filter-tag a { color:var(--gray); text-decoration:none; margin-left:0.1rem; transition:color .15s; }
+  .filter-tag a:hover { color:var(--red); }
+
+  /* Search */
+  .search-box {
+    position: relative; margin-bottom: 1.3rem;
+  }
+  .search-icon {
+    position:absolute; left:1rem; top:50%; transform:translateY(-50%);
+    color:var(--gray); pointer-events:none; font-size:0.9rem;
+  }
+  .search-input {
+    width:100%; background:var(--white); border:2px solid var(--border-soft);
+    color:var(--ink); padding:0.75rem 1rem 0.75rem 2.8rem;
+    font-size:0.88rem; font-family:'DM Sans',sans-serif;
+    border-radius:6px; outline:none; transition:border-color .2s;
+  }
+  .search-input:focus { border-color:var(--yellow); }
+  .search-input::placeholder { color:#b0a090; }
+
+  /* Grid */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.6rem;
+  }
+  .dish-card-img-wrap { position:relative; overflow:hidden; height:210px; }
+  .dish-card-img-wrap img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+  .dish-card:hover .dish-card-img-wrap img { transform:scale(1.07); }
+  .dish-badge {
+    position:absolute; top:0.8rem; left:0.8rem;
+    background:var(--yellow); color:var(--ink);
+    font-size:0.63rem; font-weight:700; letter-spacing:0.08em;
+    padding:0.2rem 0.6rem; border-radius:20px;
+    text-transform:uppercase; border:1px solid var(--yellow-dark);
+  }
+
+  .empty-state { text-align:center; padding:4rem 2rem; color:var(--gray); grid-column:1/-1; }
+  .empty-state div { font-size:3rem; margin-bottom:0.8rem; }
+
+  @media (max-width:900px) {
+    .menu-layout { grid-template-columns:1fr; }
+    .filter-sidebar { position:static; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="menu-hero">
+  <span class="section-eyebrow">日本料理 · Gastronomía Japonesa</span>
+  <h1>Nuestro Menú</h1>
+  <p>Ingredientes frescos · Recetas auténticas · Sabores inigualables</p>
+</div>
+
+<!-- Categorías -->
+<div class="cat-strip">
+  <a href="{{ url_for('paginas.menu') }}" class="cat-btn {% if not selected_cat %}active{% endif %}">🍽 Todo</a>
+  {% for cat in categories %}
+  <a href="{{ url_for('paginas.menu', categoria=cat.id, precio_min=precio_min, precio_max=precio_max,
+              picante=spice if spice is not none else '', destacados='1' if solo_dest else '', orden=orden) }}"
+     class="cat-btn {% if selected_cat == cat.id %}active{% endif %}">
+    {{ cat.icon }} {{ cat.name }}
+  </a>
+  {% endfor %}
+</div>
+
+<section style="padding:2rem 0 5rem;">
+  <div class="container">
+    <div class="menu-layout">
+
+      <!-- Sidebar -->
+      <aside class="filter-sidebar">
+        <div class="filter-header">
+          <h3>🔍 Filtros</h3>
+          <a href="{{ url_for('paginas.menu', categoria=selected_cat) }}" class="filter-clear">Limpiar todo</a>
+        </div>
+
+        <form id="filterForm" method="GET" action="{{ url_for('paginas.menu') }}">
+          {% if selected_cat %}
+            <input type="hidden" name="categoria" value="{{ selected_cat }}">
+          {% endif %}
+
+          <!-- Precio -->
+          <div class="filter-group">
+            <span class="filter-label">💴 Rango de Precio</span>
+            <div class="price-inputs">
+              <input type="number" class="price-input" id="minInput" name="precio_min"
+                     value="{{ precio_min|int if precio_min else global_min }}"
+                     min="{{ global_min }}" max="{{ global_max }}" step="500" placeholder="Mín">
+              <span class="price-sep">–</span>
+              <input type="number" class="price-input" id="maxInput" name="precio_max"
+                     value="{{ precio_max|int if precio_max else global_max }}"
+                     min="{{ global_min }}" max="{{ global_max }}" step="500" placeholder="Máx">
+            </div>
+            <div class="range-wrap">
+              <div class="range-track"><div class="range-fill" id="rangeFill"></div></div>
+              <input type="range" class="range-slider" id="sliderMin"
+                     min="{{ global_min }}" max="{{ global_max }}" step="500"
+                     value="{{ precio_min|int if precio_min else global_min }}">
+              <input type="range" class="range-slider" id="sliderMax"
+                     min="{{ global_min }}" max="{{ global_max }}" step="500"
+                     value="{{ precio_max|int if precio_max else global_max }}">
+            </div>
+            <div class="price-labels">
+              <span>$ {{ "{:,.0f}".format(global_min) }}</span>
+              <span>$ {{ "{:,.0f}".format(global_max) }}</span>
+            </div>
+          </div>
+
+          <!-- Picante -->
+          <div class="filter-group">
+            <span class="filter-label"> Nivel de Picante</span>
+            <div class="spice-options">
+              {% set spice_labels = ['Sin picante ','Suave ','Medio ','Fuerte '] %}
+              <label class="spice-option {% if spice is none %}selected{% endif %}" onclick="selectSpice(this)">
+                <input type="radio" name="picante" value="">
+                <span class="spice-dot"></span> Todos los niveles
+              </label>
+              {% for i in range(4) %}
+              <label class="spice-option {% if spice == i %}selected{% endif %}" onclick="selectSpice(this)">
+                <input type="radio" name="picante" value="{{ i }}" {% if spice == i %}checked{% endif %}>
+                <span class="spice-dot"></span> {{ spice_labels[i] }}
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Destacados -->
+          <div class="filter-group">
+            <span class="filter-label"> Platos Especiales</span>
+            <div class="toggle-row">
+              <span class="toggle-label">Solo destacados</span>
+              <label class="toggle">
+                <input type="checkbox" name="destacados" value="1" id="toggleDest"
+                       {% if solo_dest %}checked{% endif %}
+                       onchange="document.getElementById('filterForm').submit()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Orden -->
+          <div class="filter-group">
+            <span class="filter-label">↕ Ordenar por</span>
+            <select name="orden" class="sort-select" onchange="document.getElementById('filterForm').submit()">
+              <option value="default"     {% if orden=='default'     %}selected{% endif %}>Relevancia</option>
+              <option value="precio_asc"  {% if orden=='precio_asc'  %}selected{% endif %}>Precio: menor a mayor</option>
+              <option value="precio_desc" {% if orden=='precio_desc' %}selected{% endif %}>Precio: mayor a menor</option>
+              <option value="nombre"      {% if orden=='nombre'      %}selected{% endif %}>Nombre A–Z</option>
+            </select>
+          </div>
+
+          <div style="padding:1rem 1.4rem 1.4rem;">
+            <button type="submit" class="apply-btn">Aplicar Filtros →</button>
+          </div>
+        </form>
+      </aside>
+
+      <!-- Resultados -->
+      <div>
+        <div class="search-box">
+          <span class="search-icon"></span>
+          <input type="text" class="search-input" id="searchInput" placeholder="Buscar plato por nombre...">
+        </div>
+
+        <!-- Tags activos -->
+        <div class="active-tags">
+          {% if precio_min or precio_max %}
+          <span class="filter-tag">
+             $ {{ "{:,.0f}".format(precio_min or global_min) }} – $ {{ "{:,.0f}".format(precio_max or global_max) }}
+            <a href="{{ url_for('paginas.menu', categoria=selected_cat, picante=spice, destacados='1' if solo_dest else '', orden=orden) }}">✕</a>
+          </span>
+          {% endif %}
+          {% if spice is not none %}
+          {% set sl = ['Sin picante','Suave','Medio','Fuerte'] %}
+          <span class="filter-tag">
+             {{ sl[spice] }}
+            <a href="{{ url_for('paginas.menu', categoria=selected_cat, precio_min=precio_min, precio_max=precio_max, destacados='1' if solo_dest else '', orden=orden) }}">✕</a>
+          </span>
+          {% endif %}
+          {% if solo_dest %}
+          <span class="filter-tag">
+             Solo destacados
+            <a href="{{ url_for('paginas.menu', categoria=selected_cat, precio_min=precio_min, precio_max=precio_max, picante=spice, orden=orden) }}">✕</a>
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="results-bar">
+          <span class="results-count"><strong>{{ dishes|length }}</strong> platos encontrados</span>
+          <span style="font-size:0.79rem;color:var(--gray)">
+            {% if orden=='precio_asc'  %}↑ Precio menor a mayor
+            {% elif orden=='precio_desc'%}↓ Precio mayor a menor
+            {% elif orden=='nombre'    %}A–Z Nombre
+            {% else %}Relevancia{% endif %}
+          </span>
+        </div>
+
+        <div class="menu-grid" id="dishGrid">
+          {% if dishes %}
+            {% for dish in dishes %}
+            <a href="{{ url_for('paginas.dish_detail', id=dish.id) }}" class="dish-card" data-name="{{ dish.name|lower }}">
+              <div class="dish-card-img-wrap">
+                <img src="{{ dish.image_url }}" alt="{{ dish.name }}" loading="lazy">
+                {% if dish.is_featured %}<span class="dish-badge">⭐ Destacado</span>{% endif %}
+              </div>
+              <div class="dish-card-body">
+                <div class="dish-card-jp">{{ dish.name_jp }} · {{ dish.category.name_jp }}</div>
+                <div class="dish-card-name">{{ dish.name }}</div>
+                <p class="dish-card-desc">{{ dish.description[:95] }}...</p>
+                <div class="dish-card-footer">
+                  <span class="dish-price">$ {{ "{:,.0f}".format(dish.price) }}</span>
+                  <span>{{ '🌶️' * dish.spice_level if dish.spice_level > 0 else '' }}</span>
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <div></div>
+              <p>No hay platos con esos filtros.</p>
+              <a href="{{ url_for('paginas.menu') }}" class="btn btn-outline" style="margin-top:1rem;">Ver todo el menú</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Búsqueda en tiempo real
+  document.getElementById('searchInput')?.addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.dish-card').forEach(c => {
+      c.style.display = c.dataset.name.includes(q) ? '' : 'none';
+    });
+  });
+
+  // Dual range slider
+  const sMin = document.getElementById('sliderMin');
+  const sMax = document.getElementById('sliderMax');
+  const iMin = document.getElementById('minInput');
+  const iMax = document.getElementById('maxInput');
+  const fill = document.getElementById('rangeFill');
+  const GMIN = {{ global_min }}, GMAX = {{ global_max }};
+
+  function updateFill() {
+    const lo = (sMin.value - GMIN) / (GMAX - GMIN) * 100;
+    const hi = (sMax.value - GMIN) / (GMAX - GMIN) * 100;
+    fill.style.left  = lo + '%';
+    fill.style.width = Math.max(0, hi - lo) + '%';
+  }
+  sMin.addEventListener('input', () => {
+    if (+sMin.value > +sMax.value) sMin.value = sMax.value;
+    iMin.value = sMin.value; updateFill();
+  });
+  sMax.addEventListener('input', () => {
+    if (+sMax.value < +sMin.value) sMax.value = sMin.value;
+    iMax.value = sMax.value; updateFill();
+  });
+  iMin.addEventListener('change', () => { sMin.value = iMin.value; updateFill(); });
+  iMax.addEventListener('change', () => { sMax.value = iMax.value; updateFill(); });
+  updateFill();
+
+  function selectSpice(el) {
+    document.querySelectorAll('.spice-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
+{% endblock %}

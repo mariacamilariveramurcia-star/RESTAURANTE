@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CAM-CAM | Cocina Japonesa{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+JP:wght@300;400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Paleta amarillo claro */
+      --bg:          #fffdf0;        /* fondo principal: crema-amarillo muy suave */
+      --bg2:         #fff9d6;        /* secciones alternadas */
+      --bg3:         #fff3a8;        /* acento amarillo claro */
+      --yellow:      #f5c800;        /* amarillo vibrante */
+      --yellow-dark: #d4a800;        /* hover / bordes */
+      --yellow-soft: #fff0a0;        /* chips / tags */
+      --red:         #c9363a;        /* acento rojo japonés */
+      --red-light:   #e8514f;
+      --ink:         #1a1612;        /* texto oscuro */
+      --ink-soft:    #3a342c;
+      --gray:        #7a6f60;
+      --white:       #ffffff;
+      --border:      #e8d96a;        /* borde amarillo */
+      --border-soft: #f0e890;
+      --shadow:      0 8px 32px rgba(200,160,0,0.12);
+      --shadow-lg:   0 20px 60px rgba(200,160,0,0.18);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 4rem;
+      height: 72px;
+      background: rgba(255,253,240,0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 2px solid var(--border);
+      box-shadow: 0 2px 16px rgba(200,160,0,0.08);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem; font-weight: 700;
+      color: var(--ink); text-decoration: none;
+      display: flex; flex-direction: column;
+    }
+    .nav-logo-main { letter-spacing: 0.08em; }
+    .nav-logo-main span { color: var(--red); }
+    .nav-logo-jp {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.6rem; color: var(--gray);
+      letter-spacing: 0.35em; margin-top: -2px;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 2rem; list-style: none;
+    }
+    .nav-links a {
+      color: var(--ink-soft); text-decoration: none;
+      font-size: 0.87rem; font-weight: 500;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      padding: 0.3rem 0;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--ink);
+      border-bottom-color: var(--yellow);
+    }
+    .nav-cta {
+      background: var(--red) !important;
+      color: var(--white) !important;
+      padding: 0.55rem 1.4rem !important;
+      border-radius: 3px !important;
+      border-bottom: none !important;
+    }
+    .nav-cta:hover { background: var(--red-light) !important; transform: translateY(-1px); }
+
+    /* ── Flash ── */
+    .flash-container { position:fixed; top:80px; right:2rem; z-index:200; }
+    .flash {
+      background: var(--yellow); color: var(--ink);
+      padding: 1rem 1.5rem; border-radius: 4px;
+      font-weight: 500; font-size: 0.9rem; max-width: 380px;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn 0.4s ease;
+      border-left: 4px solid var(--yellow-dark);
+    }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    .page-content { padding-top: 72px; }
+
+    /* ── Tipografía ── */
+    .section-eyebrow {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.72rem; letter-spacing: 0.45em;
+      color: var(--yellow-dark); text-transform: uppercase;
+      display: block; margin-bottom: 0.7rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      font-weight: 700; line-height: 1.15;
+      color: var(--ink);
+    }
+    .divider {
+      width: 56px; height: 3px;
+      background: linear-gradient(90deg, var(--red), var(--yellow));
+      margin: 1.1rem 0 2.2rem; border-radius: 2px;
+    }
+
+    /* ── Botones ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.8rem 2rem; font-size: 0.85rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: all 0.22s ease; border-radius: 3px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-yellow {
+      background: var(--yellow); color: var(--ink);
+      border: 2px solid var(--yellow-dark);
+    }
+    .btn-yellow:hover {
+      background: var(--yellow-dark); color: var(--white);
+      transform: translateY(-2px); box-shadow: var(--shadow);
+    }
+    .btn-outline {
+      background: transparent; color: var(--ink);
+      border: 2px solid var(--border);
+    }
+    .btn-outline:hover {
+      border-color: var(--yellow-dark); background: var(--yellow-soft);
+    }
+    .btn-red {
+      background: var(--red); color: var(--white);
+      border: 2px solid var(--red);
+    }
+    .btn-red:hover { background: var(--red-light); transform: translateY(-2px); }
+
+    /* ── Cards ── */
+    .dish-card {
+      background: var(--white);
+      border: 2px solid var(--border-soft);
+      border-radius: 8px; overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      text-decoration: none; display: block; color: inherit;
+    }
+    .dish-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--yellow);
+    }
+    .dish-card img {
+      width: 100%; height: 220px; object-fit: cover;
+      transition: transform 0.4s;
+    }
+    .dish-card:hover img { transform: scale(1.04); }
+    .dish-card-body { padding: 1.3rem 1.4rem; }
+    .dish-card-jp {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.68rem; color: var(--yellow-dark);
+      letter-spacing: 0.2em; margin-bottom: 0.3rem;
+    }
+    .dish-card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; color: var(--ink); margin-bottom: 0.45rem;
+    }
+    .dish-card-desc {
+      font-size: 0.81rem; color: var(--gray);
+      line-height: 1.6; margin-bottom: 0.9rem;
+    }
+    .dish-card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 0.8rem; border-top: 1px solid var(--border-soft);
+    }
+    .dish-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem; color: var(--red); font-weight: 700;
+    }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-block; padding: 0.2rem 0.65rem;
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      text-transform: uppercase; border-radius: 3px;
+    }
+    .tag-yellow { background: var(--yellow-soft); color: var(--yellow-dark); border: 1px solid var(--border); }
+    .tag-red    { background: rgba(201,54,58,0.08); color: var(--red); border: 1px solid rgba(201,54,58,0.25); }
+
+    /* ── Layout ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.8rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--ink);
+      color: rgba(255,253,240,0.85);
+      padding: 4rem;
+      margin-top: 5rem;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem; max-width: 1200px; margin: 0 auto;
+    }
+    .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem; color: var(--yellow);
+    }
+    .footer-brand span { color: var(--red); }
+    .footer-tagline { font-size: 0.84rem; color: #a09880; margin: 0.7rem 0 1.2rem; line-height: 1.7; }
+    .footer-heading { font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--yellow); margin-bottom: 1rem; }
+    .footer-links { list-style: none; }
+    .footer-links li { margin-bottom: 0.55rem; }
+    .footer-links a { color: #a09880; text-decoration: none; font-size: 0.86rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--yellow); }
+    .footer-info { font-size: 0.84rem; color: #a09880; line-height: 2; }
+    .footer-bottom {
+      max-width: 1200px; margin: 2.5rem auto 0;
+      padding-top: 2rem; border-top: 1px solid rgba(255,253,240,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.78rem; color: #6a6050;
+    }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { gap: 1.2rem; }
+      .grid-3, .grid-4 { grid-template-columns: repeat(2,1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      nav { padding: 0 1rem; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a href="{{ url_for('paginas.index') }}" class="nav-logo">
+    <span class="nav-logo-main">CAM<span>-</span>CAM</span>
+    <span class="nav-logo-jp">カムカム · 日本料理</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('paginas.index') }}"   {% if request.endpoint=='paginas.index'   %}class="active"{% endif %}>Inicio</a></li>
+    <li><a href="{{ url_for('paginas.menu') }}"    {% if request.endpoint=='paginas.menu'    %}class="active"{% endif %}>Menú</a></li>
+    <li><a href="{{ url_for('paginas.pedidos') }}" class="nav-cta" {% if request.endpoint=='paginas.pedidos' %}class="active"{% endif %}>🛒 Pedir</a></li>
+  </ul>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="page-content">{% block content %}{% endblock %}</div>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">CAM<span>-</span>CAM</div>
+      <p class="footer-tagline">Una experiencia gastronómica japonesa auténtica en el corazón de Bogotá. Tradición, sabor y armonía en cada plato.</p>
+      <div style="font-family:'Noto Serif JP',serif;color:var(--yellow);font-size:0.78rem;letter-spacing:0.2em;">いらっしゃいませ</div>
+    </div>
+    <div>
+      <div class="footer-heading">Navegación</div>
+      <ul class="footer-links">
+        <li><a href="{{ url_for('paginas.index') }}">Inicio</a></li>
+        <li><a href="{{ url_for('paginas.menu') }}">Menú</a></li>
+        <li><a href="{{ url_for('paginas.pedidos') }}">Hacer Pedido</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">Horario</div>
+      <div class="footer-info">
+        Lun – Vie<br><strong style="color:#fffdf0">12:00 – 22:00</strong><br><br>
+        Sáb – Dom<br><strong style="color:#fffdf0">11:00 – 23:00</strong>
+      </div>
+    </div>
+    <div>
+      <div class="footer-heading">Contacto</div>
+      <div class="footer-info">
+        📍 Calle 93 #13-40<br>Bogotá, Colombia<br><br>
+        📞 +57 310 555 0101<br>
+        ✉️ hola@camcam.co
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 CAM-CAM Cocina Japonesa · Bogotá</span>
+    <span style="font-family:'Noto Serif JP',serif;color:var(--yellow);font-size:0.72rem;">日本料理</span>
+  </div>
+</footer>
+
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(el => {
+      el.style.transition = 'opacity 0.5s, transform 0.5s';
+      el.style.opacity = '0'; el.style.transform = 'translateX(120%)';
+      setTimeout(() => el.remove(), 500);
+    });
+  }, 4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
